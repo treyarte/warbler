@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -18,7 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
@@ -113,7 +113,9 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    # IMPLEMENT THIS
+    do_logout()
+    flash("Successfully logged out", "success")
+    return redirect('/login')
 
 
 ##############################################################################
@@ -211,7 +213,33 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    form = UserEditForm(obj=g.user)
+    edit_user = User.query.get_or_404(g.user.id)
+    if form.validate_on_submit():
+        user = User.authenticate(g.user.username, g.user.password)
+
+        if user:
+            try:
+                edit_user.username = form.username.data
+                edit_user.email = form.email.data
+                edit_user.image_url = form.image_url.data
+                edit_user.header_image_url = form.header_image_url.data
+                edit_user.bio = form.bio.data
+
+                db.session.commit()
+
+                flash('Profile successfully updated', 'success')
+                return redirect(f"/users/{user.id}")
+            except IntegrityError:
+                flash('username is already taken')
+                return redirect('/')
+        else:
+            flash('Password is not the same', 'danger')
+            return redirect('/')
+
+        return redirect("/")
+
+    return render_template("users/edit.html", form=form)
 
 
 @app.route('/users/delete', methods=["POST"])
