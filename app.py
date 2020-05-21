@@ -214,24 +214,22 @@ def profile():
     """Update profile for current user."""
 
     form = UserEditForm(obj=g.user)
-    edit_user = User.query.get_or_404(g.user.id)
     if form.validate_on_submit():
-        user = User.authenticate(g.user.username, g.user.password)
-
+        user = User.authenticate(g.user.username, form.password.data)
         if user:
             try:
-                edit_user.username = form.username.data
-                edit_user.email = form.email.data
-                edit_user.image_url = form.image_url.data
-                edit_user.header_image_url = form.header_image_url.data
-                edit_user.bio = form.bio.data
-
+                user.username = form.username.data
+                user.email = form.email.data
+                user.image_url = form.image_url.data
+                user.header_image_url = form.header_image_url.data
+                user.bio = form.bio.data
+                user.location = form.location.data
                 db.session.commit()
 
                 flash('Profile successfully updated', 'success')
                 return redirect(f"/users/{user.id}")
             except IntegrityError:
-                flash('username is already taken')
+                flash('username is already taken', "danger")
                 return redirect('/')
         else:
             flash('Password is not the same', 'danger')
