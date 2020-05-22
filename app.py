@@ -283,7 +283,12 @@ def like_message(message_id):
     flash("You liked the warble", "success")
     return redirect("/")
     
-    
+@app.route("/users/remove_like/<int:message_id")
+def remove_like(message_id):
+    """Remove user like from message"""
+
+  
+
 
 ##############################################################################
 # Messages routes:
