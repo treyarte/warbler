@@ -283,11 +283,29 @@ def like_message(message_id):
     flash("You liked the warble", "success")
     return redirect("/")
     
-@app.route("/users/remove_like/<int:message_id")
+@app.route("/users/remove_like/<int:message_id>", methods=["POST"])
 def remove_like(message_id):
     """Remove user like from message"""
 
-  
+    if not g.user:
+        flash("Access Unauthorized.", "danger")
+        return redirect("/")
+
+    message = Message.query.get_or_404(message_id)
+
+    found_like = Likes.query.filter(Likes.user_id == g.user.id, Likes.message_id == message.id).first()
+
+    if found_like:
+        db.session.delete(found_like)
+        db.session.commit()
+        
+        flash("You unliked the warble :(", "success")
+        return redirect("/")
+    else:
+        flash("Message was never liked", "danger")    
+        return("/")
+
+
 
 
 ##############################################################################
