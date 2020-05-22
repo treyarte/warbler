@@ -5,7 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, Message,Follows
+from models import db, connect_db, User, Message,Follows, Likes
 
 CURR_USER_KEY = "curr_user"
 
@@ -255,6 +255,35 @@ def delete_user():
 
     return redirect("/signup")
 
+@app.route('/users/add_like/<int:message_id>', methods=["POST"])
+def like_message(message_id):
+    """Like another users message"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    message = Message.query.get_or_404(message_id)
+
+    if g.user.id == message.user.id:
+        flash("Cannot like your own message", "danger")
+        return redirect("/")
+    
+    #check if user already liked warble
+    already_liked = Likes.query.filter(Likes.user_id == g.user.id).filter(Likes.message_id == message.id).first()
+
+    if already_liked:
+        flash("You have already liked that post", "danger")
+        return redirect("/")
+    
+    like = Likes(user_id=g.user.id, message_id=message.id)
+
+    db.session.add(like)
+    db.session.commit()
+
+    flash("You liked the warble", "success")
+    return redirect("/")
+    
+    
 
 ##############################################################################
 # Messages routes:
