@@ -142,6 +142,10 @@ def list_users():
 def users_show(user_id):
     """Show user profile."""
 
+    if not g.user:
+        flash("Access unauthorized", "danger")
+        return redirect("/")
+
     user = User.query.get_or_404(user_id)
 
     # snagging messages in order from the database;
@@ -254,6 +258,20 @@ def delete_user():
     db.session.commit()
 
     return redirect("/signup")
+
+@app.route("/users/<int:user_id>/likes")
+def user_likes_index(user_id):
+    """Display messages user liked"""
+    if not g.user:
+        flash("Access unauthorized", "danger")
+        return redirect("/")
+    
+    user = User.query.get_or_404(user_id)
+
+    liked_messages = user.likes
+
+    return render_template("users/likes.html", user = user, messages = liked_messages)
+    
 
 @app.route('/users/add_like/<int:message_id>', methods=["POST"])
 def like_message(message_id):
@@ -370,9 +388,18 @@ def homepage():
     """
 
     if g.user:
+        #bug: if user made a message and is not following anyone only their message will show 
         messages = g.user.following_messages()
 
-        return render_template('home.html', messages=messages)
+        if messages:
+            return render_template('home.html', messages=messages)
+
+        all_message = db.session.query(Message).order_by(Message.timestamp.desc()).limit(100).all()
+
+        return render_template('home.html', messages=all_message)
+
+
+
 
     else:
         return render_template('home-anon.html')
