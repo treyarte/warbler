@@ -100,14 +100,14 @@ class User(db.Model):
         "User",
         secondary="follows",
         primaryjoin=(Follows.user_being_followed_id == id),
-        secondaryjoin=(Follows.user_following_id == id)
+        secondaryjoin=(Follows.user_following_id == id),
     )
 
     following = db.relationship(
         "User",
         secondary="follows",
         primaryjoin=(Follows.user_following_id == id),
-        secondaryjoin=(Follows.user_being_followed_id == id)
+        secondaryjoin=(Follows.user_being_followed_id == id),
     )
 
     likes = db.relationship(
@@ -129,6 +129,18 @@ class User(db.Model):
 
         found_user_list = [user for user in self.following if user == other_user]
         return len(found_user_list) == 1
+
+    def following_messages(self):
+        following_ids = [f.id for f in self.following]
+        #add the current user to the list to get their messages too.
+        following_ids.append(self.id)
+
+        messages = Message.query.filter(
+            Message.user_id.in_(
+            following_ids)).order_by(
+            Message.timestamp.desc()).limit(100).all()
+
+        return messages
 
     @classmethod
     def signup(cls, username, email, password, image_url):
