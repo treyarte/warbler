@@ -17,10 +17,11 @@ from models import db, connect_db, Message, User
 
 os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 
-
 # Now we can import app
 
 from app import app, CURR_USER_KEY
+
+app.config["SQLALCHEMY_ECHO"] = False
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
@@ -49,10 +50,15 @@ class MessageViewTestCase(TestCase):
                                     password="testuser",
                                     image_url=None)
 
+
         db.session.commit()
 
+    def tearDown(self):
+        """rollback transactions"""
+        db.session.rollback()
+
     def test_add_message(self):
-        """Can use add a message?"""
+        """Can user add a message?"""
 
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
@@ -69,5 +75,87 @@ class MessageViewTestCase(TestCase):
             # Make sure it redirects
             self.assertEqual(resp.status_code, 302)
 
-            msg = Message.query.one()
+            msg = Message.query.filter(Message.text=="Hello").first()
             self.assertEqual(msg.text, "Hello")
+
+    def test_delete_message(self):
+        """check if a user can delete a message"""
+
+        msg = Message(user_id = self.testuser.id, text="This is a test")
+
+        db.session.add(msg)
+        db.session.commit()
+
+        msg_id = msg.id
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            
+            resp = c.post(f"/messages/{msg_id}/delete", follow_redirects=True)
+
+            msg = Message.query.get(msg_id)
+       
+            self.assertEqual(resp.status_code, 200)
+            self.assertIsNone(msg)
+
+
+    def test_logout_add_message(self):
+        """Check if a non user try to add a message"""
+
+        with self.client as c:
+
+            resp = c.post("/messages/new", data={"text": "howdy"}, follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            msg = Message.query.filter(Message.text == "howdy").first()
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIsNone(msg)
+            self.assertIn('<div class="alert alert-danger">Access unauthorized.</div>', html)
+
+
+    def test_logout_delete_message(self):
+        """Check if a non user try to delete a message"""
+
+        msg = Message(user_id = self.testuser.id, text="This is a test")
+
+        db.session.add(msg)
+        db.session.commit()
+
+        msg_id = msg.id
+
+        with self.client as c:
+            
+            resp = c.post(f"/messages/{msg_id}/delete", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            msg = Message.query.get(msg_id)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertTrue(msg)
+            self.assertIn('<div class="alert alert-danger">Access unauthorized.</div>', html)
+
+    def test_delete_other_user_message(self):
+        """Check if a user can delete another users message"""
+
+        msg = Message(user_id = self.testuser.id, text="This is a test")
+        user = User.signup("deleter", "delete@delete.com", "asdfgh", None)
+
+        db.session.add_all([msg, user])
+        db.session.commit()
+
+        user_id = user.id
+        msg_id = msg.id
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = user_id
+            
+            resp = c.post(f"/messages/{msg_id}/delete", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            msg = Message.query.get(msg_id)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertTrue(msg)
+            self.assertIn('<div class="alert alert-danger">Access unauthorized.</div>', html)
