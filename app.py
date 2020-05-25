@@ -1,6 +1,6 @@
 import os
 import pdb
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
@@ -297,9 +297,17 @@ def like_message(message_id):
 
     db.session.add(like)
     db.session.commit()
-
-    flash("You liked the warble", "success")
-    return redirect("/")
+    
+    return jsonify(data=f""" <form
+          action="/users/remove_like/{message.id}"
+          method="post"
+          id="messages-form"
+        >
+          <button class="btn btn-sm btn-danger">
+            <i class="fas fa-heart"></i>
+          </button>
+        </form>""")
+   
     
 @app.route("/users/remove_like/<int:message_id>", methods=["POST"])
 def remove_like(message_id):
@@ -317,11 +325,23 @@ def remove_like(message_id):
         db.session.delete(found_like)
         db.session.commit()
         
-        flash("You unliked the warble :(", "success")
-        return redirect("/")
+        return jsonify(data = f"""<form
+          method="POST"
+          action="/users/add_like/{message.id }"
+          id="messages-form"
+        >
+          <button
+            class="
+                btn 
+                btn-sm 
+                btn-secondary"
+          >
+            <i class="far fa-heart"></i>
+          </button>
+        </form>""")
     else:
         flash("Message was never liked", "danger")    
-        return("/")
+        return redirect("/")
 
 
 
@@ -404,6 +424,10 @@ def homepage():
     else:
         return render_template('home-anon.html')
 
+@app.errorhandler(404)
+def not_found(e):
+
+    return render_template("/errors/custom_404.html"), 404
 
 ##############################################################################
 # Turn off all caching in Flask

@@ -109,7 +109,7 @@ nav form.navbar-form {
  */
 
 .onboarding > .navbar {
-  background-image: url("/static/images/nav-bg.png");
+  background-image: url('/static/images/nav-bg.png');
   background-size: 100% 100%;
 }
 
@@ -396,7 +396,7 @@ p.card-bio {
   width: 100vw;
   left: 0;
   z-index: -1;
-  background-image: url("/static/images/signed-out-home.jpg");
+  background-image: url('/static/images/signed-out-home.jpg');
   background-size: cover;
   background-position: center center;
   color: #fff;
@@ -417,7 +417,7 @@ p.card-bio {
 }
 
 .home-hero:before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -525,7 +525,7 @@ p.card-bio {
 /* ================================ 404 page */
 
 .message-404 {
-  color: white;
+  color: #3f3f44;
   margin-top: 2em;
   text-align: center;
 }
@@ -540,4 +540,14 @@ p.card-bio {
 
 .message-404 .form-inline input {
   flex: 1;
+}
+
+.img-404-container {
+}
+
+.img-404 {
+  width: 20%;
+  height: auto;
+  border-radius: 3%;
+  text-align: center;
 }
