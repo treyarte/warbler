@@ -21,6 +21,32 @@
         >
         <p>{{ message.text }}</p>
       </div>
+      {%if message in g.user.likes%}
+      <form
+        action="/users/remove_like/{{message.id}}"
+        method="post"
+        id="messages-form"
+      >
+        <button class="btn btn-sm btn-danger">
+          <i class="fas fa-heart"></i>
+        </button>
+      </form>
+      {%elif message.user_id == g.user.id%} {%else%}
+      <form
+        method="POST"
+        action="/users/add_like/{{ message.id }}"
+        id="messages-form"
+      >
+        <button
+          class="
+                btn 
+                btn-sm 
+                {{'btn-primary' if message.id in likes else 'btn-secondary'}}"
+        >
+          <i class="far fa-heart"></i>
+        </button>
+      </form>
+      {%endif%}
     </li>
 
     {% endfor %}

@@ -62,7 +62,7 @@ class UserViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('<div class="alert alert-danger">Access unauthorized.</div>', html)
+            self.assertIn('<div class="alert alert-danger">Access unauthorized</div>', html)
     
     def test_show_followers(self):
         """can authenticated users see a who a user followers"""
@@ -86,4 +86,4 @@ class UserViewTestCase(TestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('<div class="alert alert-danger">Access unauthorized.</div>', html)
+            self.assertIn('<div class="alert alert-danger">Access unauthorized</div>', html)
