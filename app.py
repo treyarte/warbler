@@ -408,10 +408,10 @@ def homepage():
     """
 
     if g.user:
-        #bug: if user made a message and is not following anyone only their message will show 
+        
         messages = g.user.following_messages()
 
-        if messages:
+        if messages and g.user.following:
             return render_template('home.html', messages=messages)
 
         all_message = db.session.query(Message).order_by(Message.timestamp.desc()).limit(100).all()
