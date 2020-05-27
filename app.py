@@ -42,6 +42,7 @@ def add_user_to_g():
 
 
 def authorize(func):
+    """decoratetor for authorizing users"""
     @wraps(func)
     def decorate_function(*args, **kwargs):
         if not g.user:

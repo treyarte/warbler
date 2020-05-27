@@ -111,7 +111,7 @@ class MessageViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIsNone(msg)
-            self.assertIn('<div class="alert alert-danger">Access unauthorized.</div>', html)
+            self.assertIn('<div class="alert alert-danger">Access unauthorized</div>', html)
 
 
     def test_logout_delete_message(self):
